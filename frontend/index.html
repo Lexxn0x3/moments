@@ -1,22 +1,36 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Photo Gallery</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moments</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://kit.fontawesome.com/def20d6016.js" crossorigin="anonymous"></script>
 </head>
-<body>
-    <h1>Welcome to the Photo Gallery</h1>
-    <form id="upload-form" enctype="multipart/form-data">
-        <input type="file" name="images" id="images" accept="image/*" multiple required>
-        <button type="submit">Upload</button>
-    </form>
-    <div id="status"></div>
-    <div id="gallery" class="photo-grid"></div>
-
-    <!-- Modal for displaying large photos -->
+<body class="bg-home">
+    <header class="blackgradient">
+        <div class="container">
+            <h1>VRealityNexus</h1>
+            <a type="button" class="btn btn-info" href="/authorize/discord"><i class="fa-brands fa-discord"></i> Login with Discord</a>
+        </div>
+    </header>
+    <main>
+        <div class="welcome-container" style="background-color: rgba(24, 24, 24, 0.8)">
+            <h1>Let's upload some files!</h1>
+            <form id="upload-form" enctype="multipart/form-data">
+                <label for="file-upload" class="btn btn-pink">Upload Files</label>
+                <input style="display: none" id="file-upload" type="file" name="images" id="images" accept="image/*" multiple required>
+                <button class="btn btn-info" type="submit">Upload</button>
+            </form>
+            <div id="status"></div>
+            <div id="gallery" class="photo-grid"></div>
+        </div>
+    </main>
+    <footer class="blackgradient">
+        <div class="container">
+            <p>&copy; 2024 JerryFox & LexxVR. All rights reserved.</p>
+        </div>
+    </footer>
     <div id="photo-modal" class="modal">
         <span class="close">&times;</span>
         <div class="modal-content-wrapper">
@@ -26,101 +40,6 @@
         <a class="prev" id="prev-photo">&#10094;</a>
         <a class="next" id="next-photo">&#10095;</a>
     </div>
-
-    <script>
-        let currentPhotoIndex = 0;
-        let photos = [];
-
-        document.getElementById('upload-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const files = document.getElementById('images').files;
-            const status = document.getElementById('status');
-            status.innerHTML = '';
-
-            for (let i = 0; i < files.length; i++) {
-                const formData = new FormData();
-                formData.append('image', files[i]);
-
-                const response = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (response.ok) {
-                    status.innerHTML += `Uploaded ${files[i].name} successfully.<br>`;
-                    loadImages();
-                } else {
-                    status.innerHTML += `Failed to upload ${files[i].name}.<br>`;
-                }
-            }
-        });
-
-        async function loadImages() {
-            const response = await fetch('/api/photos');
-            photos = await response.json();
-            const gallery = document.getElementById('gallery');
-            gallery.innerHTML = '';
-
-            photos.forEach((photo, index) => {
-                const img = document.createElement('img');
-                img.src = `/api/photo/${photo.filename}`;
-                img.alt = photo.metadata;
-                img.classList.add('photo');
-                img.dataset.index = index;
-                gallery.appendChild(img);
-
-                img.addEventListener('click', () => openModal(index));
-            });
-        }
-
-        function openModal(index) {
-            currentPhotoIndex = index;
-            const modal = document.getElementById('photo-modal');
-            modal.style.display = "block";
-            displayPhoto(index);
-
-            document.onkeydown = (event) => {
-                switch (event.key) {
-                    case "ArrowLeft":
-                        displayPhoto(currentPhotoIndex - 1);
-                        break;
-                    case "ArrowRight":
-                        displayPhoto(currentPhotoIndex + 1);
-                        break;
-                    case "Escape":
-                        modal.style.display = "none";
-                        break;
-                }
-            };
-
-            const closeModal = document.getElementsByClassName('close')[0];
-            closeModal.onclick = () => modal.style.display = "none";
-
-            window.onclick = (event) => {
-                if (event.target == modal) {
-                    modal.style.display = "none";
-                }
-            };
-        }
-
-        function displayPhoto(index) {
-            if (index < 0) index = photos.length - 1;
-            if (index >= photos.length) index = 0;
-
-            currentPhotoIndex = index;
-            const photo = photos[index];
-            const largePhoto = document.getElementById('large-photo');
-            const caption = document.getElementById('photo-caption');
-
-            largePhoto.src = `/api/photo/${photo.filename}`;
-            caption.innerHTML = photo.metadata;
-
-            document.getElementById('prev-photo').onclick = () => displayPhoto(currentPhotoIndex - 1);
-            document.getElementById('next-photo').onclick = () => displayPhoto(currentPhotoIndex + 1);
-        }
-
-        loadImages();
-    </script>
+    <script src="scripts/loadImages.js"></script>
 </body>
 </html>
-
