@@ -44,13 +44,14 @@ form.addEventListener('submit', async (e) => {
                 toastr.error(`Failed to upload ${file.name}.`);
                 progressBar.querySelector('.file-name').textContent = `Failed to upload ${file.name}`;
                 progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
+                progressBar.querySelector('.retry-button').style.display = "inline-block"; // Show retry button on failure
             }
-            
+
             if (i === files.length - 1) {
                 fileInput.value = '';
                 fileUploadLabel.textContent = 'Select files';
                 uploadButton.style.display = "none";
-                loadImages()
+                loadImages();
             }
         };
 
@@ -58,6 +59,7 @@ form.addEventListener('submit', async (e) => {
             toastr.error(`Failed to upload ${file.name}.`);
             progressBar.querySelector('.file-name').textContent = `Failed to upload ${file.name}`;
             progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
+            progressBar.querySelector('.retry-button').style.display = "inline-block"; // Show retry button on failure
         };
 
         xhr.upload.addEventListener('progress', (event) => {
@@ -86,8 +88,61 @@ function createProgressBar(fileName) {
     fileNameSpan.classList.add('file-name');
     fileNameSpan.textContent = fileName;
     progress.appendChild(fileNameSpan);
+
+    const retryButton = document.createElement('button');
+    retryButton.classList.add('retry-button');
+    retryButton.textContent = 'Retry';
+    retryButton.style.display = 'none';
+    retryButton.addEventListener('click', () => {
+        retryUpload(fileName, progressBar);
+    });
+    progressBar.appendChild(retryButton);
     
     return progressBar;
+}
+
+function retryUpload(fileName, progressBar) {
+    const file = progressBar.querySelector('.file-name').textContent;
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload');
+
+    xhr.onload = async function() {
+        if (xhr.status === 200) {
+            toastr.success(`Uploaded ${file} successfully!`);
+            progressBar.remove();
+        } else {
+            toastr.error(`Failed to upload ${file}.`);
+            progressBar.querySelector('.file-name').textContent = `Failed to upload ${file}`;
+            progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
+            progressBar.querySelector('.retry-button').style.display = "inline-block";
+        }
+
+        if (i === files.length - 1) {
+            fileInput.value = '';
+            fileUploadLabel.textContent = 'Select files';
+            uploadButton.style.display = "none";
+            loadImages();
+        }
+    };
+
+    xhr.onerror = function() {
+        toastr.error(`Failed to upload ${file}.`);
+        progressBar.querySelector('.file-name').textContent = `Failed to upload ${file}`;
+        progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
+        progressBar.querySelector('.retry-button').style.display = "inline-block";
+    };
+
+    xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+            const percentComplete = (event.loaded / event.total) * 100;
+            progressBar.querySelector('.progress').style.width = percentComplete.toFixed(2) + '%';
+        }
+    });
+
+    xhr.send(formData);
 }
 
 

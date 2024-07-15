@@ -344,7 +344,7 @@ form {
 .progress {
     height: 100%;
     line-height: 20px;
-    background: linear-gradient(60deg, #0909a8, #4444ee, #ef93fc, #ff6078, #c2213c);
+    background: linear-gradient(60deg, #0909a8, #4444ee, #96fc93, #6dff60, #21c221);
     text-align: center;
     color: white;
     transition: width 0.3s ease;
@@ -363,4 +363,19 @@ form {
     transform: translateX(-50%);
 }
 
+.retry-button {
+    position: absolute;
+    top: 50%;
+    right: 8px;
+    transform: translateY(-50%);
+    background-color: #c2213c;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
+.retry-button:hover {
+    background-color: #ff6078;
+}
