@@ -209,7 +209,7 @@ form {
 }
 
 .photo-grid img.photo:hover {
-    transform: rotate3d(1, 1, 1, 45deg);;
+    transform: rotate3d(0, 1, 0.5, 3.142rad);
 }
 
 /* Modal styles */
