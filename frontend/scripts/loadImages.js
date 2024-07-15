@@ -20,11 +20,12 @@ fileInput.addEventListener('change', () => {
 
 const form = document.getElementById('upload-form');
 form.addEventListener('submit', async (e) => {
-	e.preventDefault();
+    e.preventDefault();
 
-	const files = fileInput.files;
-	const uploadProgress = document.getElementById('upload-progress');
-	for (let i = 0; i < files.length; i++) {
+    const files = fileInput.files;
+    const uploadProgress = document.getElementById('upload-progress');
+
+    for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
         formData.append('file', files[i]);
 
@@ -33,27 +34,36 @@ form.addEventListener('submit', async (e) => {
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/upload');
+
+        xhr.onload = (function(file) {
+            return function() {
+                if (xhr.status === 200) {
+                    toastr.success(`Uploaded ${file.name} successfully!`);
+                    loadImages();
+                } else {
+                    toastr.error(`Failed to upload ${file.name}.`);
+                }
+                progressBar.remove();
+            };
+        })(files[i]);
+
+        xhr.onerror = (function(file) {
+            return function() {
+                toastr.error(`Failed to upload ${file.name}.`);
+                progressBar.remove();
+            };
+        })(files[i]);
+
         xhr.upload.addEventListener('progress', (event) => {
             if (event.lengthComputable) {
                 const percentComplete = (event.loaded / event.total) * 100;
                 progressBar.querySelector('.progress').style.width = percentComplete.toFixed(2) + '%';
             }
         });
-        xhr.onload = async () => {
-            if (xhr.status === 200) {
-                toastr.success(`Uploaded ${files[i].name} successfully!`);
-                loadImages();
-            } else {
-                toastr.error(`Failed to upload ${files[i].name}.`);
-            }
-            progressBar.remove();
-        };
-        xhr.onerror = () => {
-            toastr.error(`Failed to upload ${files[i].name}.`);
-            progressBar.remove();
-        };
+
         xhr.send(formData);
     }
+
     fileInput.value = null;
 });
 
