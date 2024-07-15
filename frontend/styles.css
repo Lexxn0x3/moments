@@ -335,6 +335,7 @@ form {
     background: linear-gradient(60deg, #0909a8, #4444ee, #ef93fc, #ff6078, #c2213c);
     text-align: center;
     color: white;
+    transition: width 0.3s ease;
 }
 
 .file-name {
@@ -344,5 +345,10 @@ form {
     white-space: nowrap;
     text-overflow: ellipsis;
     padding: 0 8px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
 }
+
 

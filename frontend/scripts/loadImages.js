@@ -31,8 +31,10 @@ form.addEventListener('submit', async (e) => {
 
         if (file.name.toLowerCase().endsWith('.heic')) {
             try {
+				console.log("HEIC is starting to convert")
                 const jpegBlob = await heic2any({ blob: file });
                 file = new File([jpegBlob], file.name.replace(/\.[^/.]+$/, '.jpg'), { type: 'image/jpeg' });
+				console.log(file)
             } catch (error) {
                 toastr.error(`Failed to convert ${file.name} from HEIC to JPEG.`);
                 continue;
