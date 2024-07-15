@@ -30,7 +30,7 @@ form.addEventListener('submit', async (e) => {
         let file = files[i];
         formData.append('image', file);
 
-        status.innerHTML = `🦊 Uploaded ${files[i]+1} out of ${files.length} files!`;
+        status.innerHTML = `🦊 Uploaded ${files[i].length+1} out of ${files.length} files!`;
 
         const progressBar = createProgressBar(file.name);
         uploadProgress.appendChild(progressBar);
