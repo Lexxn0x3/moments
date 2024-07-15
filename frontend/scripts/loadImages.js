@@ -33,7 +33,7 @@ form.addEventListener('submit', async (e) => {
         const progressBar = createProgressBar(file.name);
         uploadProgress.appendChild(progressBar);
 
-        status.innerHTML = `😳 ${files[i].length+1} out of ${files.length} 😴`;
+        status.innerHTML = `😳 ${files.indexOf(files[i]) + 1} out of ${files.length} 😴`;
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/upload');
