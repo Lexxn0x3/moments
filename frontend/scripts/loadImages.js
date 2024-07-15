@@ -20,26 +20,60 @@ fileInput.addEventListener('change', () => {
 
 const form = document.getElementById('upload-form');
 form.addEventListener('submit', async (e) => {
-	e.preventDefault();
-	const files = fileInput.files;
-	for (let i = 0; i < files.length; i++) {
-		const formData = new FormData();
-		formData.append('image', files[i]);
+    e.preventDefault();
 
-		const response = await fetch('/api/upload', {
-			method: 'POST',
-			body: formData,
-		});
+    const files = fileInput.files;
+    const uploadProgress = document.getElementById('upload-progress');
 
-		if (response.ok) {
-			toastr.success(`Uploaded ${files[i].name} successfully!`);
-			loadImages();
-		} else {
-			toastr.error(`Failes to upload ${files[i].name}.`);
-		}
-	}
-	fileInput.value = null;
+    for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('file', files[i]);
+
+        const progressBar = createProgressBar(files[i].name);
+        uploadProgress.appendChild(progressBar);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload');
+
+        xhr.onload = (function(file) {
+            return function() {
+                if (xhr.status === 200) {
+                    toastr.success(`Uploaded ${file.name} successfully!`);
+                    loadImages();
+                } else {
+                    toastr.error(`Failed to upload ${file.name}.`);
+                }
+                progressBar.remove();
+            };
+        })(files[i]);
+
+        xhr.onerror = (function(file) {
+            return function() {
+                toastr.error(`Failed to upload ${file.name}.`);
+                progressBar.remove();
+            };
+        })(files[i]);
+
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                progressBar.querySelector('.progress').style.width = percentComplete.toFixed(2) + '%';
+            }
+        });
+
+        xhr.send(formData);
+    }
+
+    fileInput.value = null;
 });
+
+function createProgressBar(fileName) {
+    const progressBar = document.createElement('div');
+    progressBar.classList.add('progress-bar');
+    progressBar.innerHTML = `<div class="progress" style="width: 0%" aria-valuemin="0" aria-valuemax="100"></div>
+                             <span class="file-name">${fileName}</span>`;
+    return progressBar;
+}
 
 async function loadImages() {
 	const response = await fetch('/api/photos');
