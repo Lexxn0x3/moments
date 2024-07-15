@@ -28,18 +28,6 @@ form.addEventListener('submit', async (e) => {
     for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
         let file = files[i];
-
-        if (file.name.toLowerCase().endsWith('.heic')) {
-            try {
-                const jpegBlob = await heic2any({ blob: file });
-                file = new File([jpegBlob], file.name.replace(/\.[^/.]+$/, '.jpg'), { type: 'image/jpeg' });
-            } catch (error) {
-				console.error(error)
-                toastr.error(`Failed to convert ${file.name} from HEIC to JPEG.`);
-                continue;
-            }
-        }
-
         formData.append('image', file);
 
         const progressBar = createProgressBar(file.name);
