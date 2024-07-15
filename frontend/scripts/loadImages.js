@@ -33,29 +33,29 @@ form.addEventListener('submit', async (e) => {
         const progressBar = createProgressBar(file.name);
         uploadProgress.appendChild(progressBar);
 
-        status.innerHTML = `😳 0 out of ${files.length} 😴`;
-
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/upload');
 
-        xhr.onload = (function(file) {
-            return function() {
-                if (xhr.status === 200) {
-                    toastr.success(`Uploaded ${file.name} successfully!`);
-                } else {
-                    toastr.error(`Failed to upload ${file.name}.`);
-                }
-                status.innerHTML = `😳 ${i + 1} out of ${files.length} 😴`;
-                progressBar.remove();
-            };
-        })(file);
-
-        xhr.onerror = (function(file) {
-            return function() {
+        xhr.onload = async function() {
+            if (xhr.status === 200) {
+                toastr.success(`Uploaded ${file.name} successfully!`);
+            } else {
                 toastr.error(`Failed to upload ${file.name}.`);
-                progressBar.remove();
-            };
-        })(file);
+            }
+            status.innerHTML = `😳 ${i + 1} out of ${files.length} 😴`;
+            progressBar.remove();
+            
+            if (i === files.length - 1) {
+                fileInput.value = '';
+                fileUploadLabel.textContent = 'Select files';
+                uploadButton.style.display = "none";
+            }
+        };
+
+        xhr.onerror = function() {
+            toastr.error(`Failed to upload ${file.name}.`);
+            progressBar.remove();
+        };
 
         xhr.upload.addEventListener('progress', (event) => {
             if (event.lengthComputable) {
@@ -66,10 +66,6 @@ form.addEventListener('submit', async (e) => {
 
         xhr.send(formData);
     }
-
-    fileInput.value = '';
-	fileUploadLabel.textContent = 'Select files';
-	uploadButton.style.display = "none";
 });
 
 function createProgressBar(fileName) {
