@@ -19,11 +19,12 @@ fileInput.addEventListener('change', () => {
 });
 
 const form = document.getElementById('upload-form');
+const uploadProgress = document.getElementById('upload-progress');
+
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const files = fileInput.files;
-	const uploadProgress = document.getElementById('upload-progress');
 
     for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
@@ -44,7 +45,7 @@ form.addEventListener('submit', async (e) => {
                 toastr.error(`Failed to upload ${file.name}.`);
                 progressBar.querySelector('.file-name').textContent = `Failed to upload ${file.name}`;
                 progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
-                progressBar.querySelector('.retry-button').style.display = "inline-block"; // Show retry button on failure
+                progressBar.querySelector('.retry-button').style.display = "inline-block";
             }
 
             if (i === files.length - 1) {
@@ -59,7 +60,7 @@ form.addEventListener('submit', async (e) => {
             toastr.error(`Failed to upload ${file.name}.`);
             progressBar.querySelector('.file-name').textContent = `Failed to upload ${file.name}`;
             progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
-            progressBar.querySelector('.retry-button').style.display = "inline-block"; // Show retry button on failure
+            progressBar.querySelector('.retry-button').style.display = "inline-block";
         };
 
         xhr.upload.addEventListener('progress', (event) => {
@@ -95,6 +96,7 @@ function createProgressBar(fileName) {
     retryButton.style.display = 'none';
     retryButton.addEventListener('click', () => {
         retryUpload(fileName, progressBar);
+        progressBar.remove();
     });
     progressBar.appendChild(retryButton);
     
@@ -105,6 +107,9 @@ function retryUpload(fileName, progressBar) {
     const file = progressBar.querySelector('.file-name').textContent;
     const formData = new FormData();
     formData.append('image', file);
+
+    const progressBar = createProgressBar(file.name);
+    uploadProgress.appendChild(progressBar);
 
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/upload');
@@ -120,12 +125,10 @@ function retryUpload(fileName, progressBar) {
             progressBar.querySelector('.retry-button').style.display = "inline-block";
         }
 
-        if (i === files.length - 1) {
-            fileInput.value = '';
-            fileUploadLabel.textContent = 'Select files';
-            uploadButton.style.display = "none";
-            loadImages();
-        }
+        fileInput.value = '';
+        fileUploadLabel.textContent = 'Select files';
+        uploadButton.style.display = "none";
+        loadImages();
     };
 
     xhr.onerror = function() {
@@ -202,27 +205,26 @@ async function displayPhoto(index) {
     const media = photos[index];
     const largePhoto = document.getElementById('large-photo');
     const largeVideo = document.getElementById('large-video');
-    const loadingGif = document.getElementById('loading-gif');
+    /* const loadingGif = document.getElementById('loading-gif'); */
     const caption = document.getElementById('media-caption');
     const fileExtension = media.filename.split('.').pop().toLowerCase();
 
-    loadingGif.style.display = 'block';
+    /* loadingGif.style.display = 'block';
     largePhoto.style.display = 'none';
-    largeVideo.style.display = 'none';
+    largeVideo.style.display = 'none'; */
 
     if (fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'png' || fileExtension === 'gif') {
         largePhoto.src = `/api/photo/${media.filename}`;
-        largePhoto.onload = () => {
+        /* largePhoto.onload = () => {
             loadingGif.style.display = 'none';
             largePhoto.style.display = 'block';
-        };
-        largePhoto.alt = 'Photo';
+        }; */
     } else if (fileExtension === 'mp4' || fileExtension === 'webm' || fileExtension === 'mov') {
         largeVideo.src = `/api/video/${media.filename}`;
-        largeVideo.onload = () => {
+        /* largeVideo.onload = () => {
             loadingGif.style.display = 'none';
             largeVideo.style.display = 'block';
-        };
+        }; */
     }
 
     caption.innerHTML = media.metadata;
