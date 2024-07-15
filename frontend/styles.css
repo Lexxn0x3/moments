@@ -294,6 +294,7 @@ form {
 }
 
 #toast-container > .toast {
+    padding: 20px;
     position: fixed;
     z-index: 9999;
 }

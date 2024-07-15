@@ -33,13 +33,12 @@ form.addEventListener('submit', async (e) => {
 
 		if (response.ok) {
 			toastr.success(`Uploaded ${files[i].name} successfully!`);
-			form.reset();
 			loadImages();
 		} else {
 			toastr.error(`Failes to upload ${files[i].name}.`);
-			form.reset();
 		}
 	}
+	fileInput.value = null;
 });
 
 async function loadImages() {
