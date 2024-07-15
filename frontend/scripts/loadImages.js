@@ -198,7 +198,7 @@ function openModal(index) {
 	};
 }
 
-async function displayPhoto(index) {
+function displayPhoto(index) {
     if (index < 0) index = photos.length - 1;
     if (index >= photos.length) index = 0;
 
@@ -220,9 +220,12 @@ async function displayPhoto(index) {
             loadingGif.style.display = 'none';
             largePhoto.style.display = 'block';
         };
+        if (largePhoto.complete) {
+            largePhoto.onload();
+        }
     } else if (fileExtension === 'mp4' || fileExtension === 'webm' || fileExtension === 'mov') {
         largeVideo.src = `/api/video/${media.filename}`;
-        largeVideo.onload = () => {
+        largeVideo.onloadeddata = () => {
             loadingGif.style.display = 'none';
             largeVideo.style.display = 'block';
         };
