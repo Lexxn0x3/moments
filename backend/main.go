@@ -22,6 +22,7 @@ import (
 	"github.com/nfnt/resize"
 	"github.com/patrickmn/go-cache"
 	"github.com/rwcarlsen/goexif/exif"
+  "github.com/adrium/goheif"
 )
 
 const (
@@ -59,16 +60,17 @@ func main() {
     router := gin.Default()
 
     
-router.POST("/api/upload", func(c *gin.Context) {
-        file, header, err := c.Request.FormFile("image")
-        if err != nil {
-            c.String(http.StatusBadRequest, "Bad request")
-            return
-        }
-        defer file.Close()
 
-        uuid := uuid.New().String()
-    extension := filepath.Ext(header.Filename)
+router.POST("/api/upload", func(c *gin.Context) {
+    file, header, err := c.Request.FormFile("media")
+    if err != nil {
+        c.String(http.StatusBadRequest, "Bad request")
+        return
+    }
+    defer file.Close()
+
+    uuid := uuid.New().String()
+    extension := strings.ToLower(filepath.Ext(header.Filename))
     filename := uuid + extension
 
     filePath := filepath.Join(uploadDir, filename)
@@ -88,12 +90,10 @@ router.POST("/api/upload", func(c *gin.Context) {
     var dateTaken time.Time
     var mediaType string
 
-    // Check file extension to determine if it's an image or video
     switch extension {
     case ".jpg", ".jpeg", ".png":
         mediaType = "image"
-        // Extract EXIF data
-        file.Seek(0, 0) // Reset file pointer
+        file.Seek(0, 0)
         exifData, err := exif.Decode(file)
         if err == nil {
             dateTaken, err = exifData.DateTime()
@@ -104,22 +104,43 @@ router.POST("/api/upload", func(c *gin.Context) {
             dateTaken = time.Now()
         }
     case ".mp4", ".mov", ".MOV":
-            mediaType = "video"
-            dateTaken = time.Now() // Use current time for video uploads
+        mediaType = "video"
+        dateTaken = time.Now()
 
-            // Generate a video preview
-            previewPath := filepath.Join(uploadDir, uuid+"_preview.jpg")
-            cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", "00:00:01.000", "-vframes", "1", previewPath)
-            output, err := cmd.CombinedOutput() // Capture combined standard output and standard error
-            if err != nil {
-                log.Printf("Error generating video preview: %v\nFFmpeg output: %s", err, output)
-                c.String(http.StatusInternalServerError, "Error generating video preview")
-                return
-            }
-        default:
-            c.String(http.StatusBadRequest, "Unsupported file type")
+        previewPath := filepath.Join(uploadDir, uuid+"_preview.jpg")
+        cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", "00:00:01.000", "-vframes", "1", previewPath)
+        output, err := cmd.CombinedOutput()
+        if err != nil {
+            log.Printf("Error generating video preview: %v\nFFmpeg output: %s", err, output)
+            c.String(http.StatusInternalServerError, "Error generating video preview")
             return
         }
+    case ".heic", ".HEIC":
+        mediaType = "image"
+        jpgFilename := uuid + ".jpg"
+        jpgFilePath := filepath.Join(uploadDir, jpgFilename)
+        err = convertHeicToJpg(filePath, jpgFilePath)
+        if err != nil {
+            c.String(http.StatusInternalServerError, "Error converting HEIC to JPG")
+            return
+        }
+
+        filePath = jpgFilePath
+        filename = jpgFilename
+        file.Seek(0, 0)
+        exifData, err := exif.Decode(file)
+        if err == nil {
+            dateTaken, err = exifData.DateTime()
+            if err != nil {
+                dateTaken = time.Now()
+            }
+        } else {
+            dateTaken = time.Now()
+        }
+    default:
+        c.String(http.StatusBadRequest, "Unsupported file type")
+        return
+    }
 
     metadata := header.Filename
 
@@ -327,5 +348,30 @@ router.GET("/api/video/:filename", func(c *gin.Context) {
     io.CopyN(c.Writer, file, end-start+1)
 })
     router.Run(":8080")
+}
+func convertHeicToJpg(input, output string) error {
+	fileInput, err := os.Open(input)
+	if err != nil {
+		return err
+	}
+	defer fileInput.Close()
+
+	img, err := goheif.Decode(fileInput)
+	if err != nil {
+		return err
+	}
+
+	fileOutput, err := os.OpenFile(output, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer fileOutput.Close()
+
+	err = jpeg.Encode(fileOutput, img, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
