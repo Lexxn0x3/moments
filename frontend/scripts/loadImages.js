@@ -23,6 +23,7 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const files = fileInput.files;
+	const uploadProgress = document.getElementById('upload-progress');
 
     for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
