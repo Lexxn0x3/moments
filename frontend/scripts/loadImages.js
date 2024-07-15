@@ -44,6 +44,7 @@ form.addEventListener('submit', async (e) => {
                     toastr.error(`Failed to upload ${file.name}.`);
                 }
                 progressBar.remove();
+				fileInput.value = '';
             };
         })(files[i]);
 
@@ -51,6 +52,7 @@ form.addEventListener('submit', async (e) => {
             return function() {
                 toastr.error(`Failed to upload ${file.name}.`);
                 progressBar.remove();
+				fileInput.files = null;
             };
         })(files[i]);
 
@@ -64,16 +66,28 @@ form.addEventListener('submit', async (e) => {
         xhr.send(formData);
     }
 
-    fileInput.value = null;
+    fileInput.files = null;
 });
 
 function createProgressBar(fileName) {
     const progressBar = document.createElement('div');
     progressBar.classList.add('progress-bar');
-    progressBar.innerHTML = `<div class="progress" style="width: 0%" aria-valuemin="0" aria-valuemax="100"></div>
-                             <span class="file-name">${fileName}</span>`;
+    
+    const progress = document.createElement('div');
+    progress.classList.add('progress');
+    progress.style.width = '0%';
+    progress.setAttribute('aria-valuemin', '0');
+    progress.setAttribute('aria-valuemax', '100');
+    progressBar.appendChild(progress);
+    
+    const fileNameSpan = document.createElement('span');
+    fileNameSpan.classList.add('file-name');
+    fileNameSpan.textContent = fileName;
+    progress.appendChild(fileNameSpan);
+    
     return progressBar;
 }
+
 
 async function loadImages() {
 	const response = await fetch('/api/photos');
