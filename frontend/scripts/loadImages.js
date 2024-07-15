@@ -222,10 +222,10 @@ async function displayPhoto(index) {
         };
     } else if (fileExtension === 'mp4' || fileExtension === 'webm' || fileExtension === 'mov') {
         largeVideo.src = `/api/video/${media.filename}`;
-        /* largeVideo.onload = () => {
+        largeVideo.onload = () => {
             loadingGif.style.display = 'none';
             largeVideo.style.display = 'block';
-        }; */
+        };
     }
 
     caption.innerHTML = media.metadata;
