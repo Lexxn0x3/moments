@@ -13,6 +13,11 @@ import (
     "os"
     "path/filepath"
     "time"
+    "bytes"
+    "image/jpeg"
+    "github.com/nfnt/resize"
+    "fmt"
+    "github.com/patrickmn/go-cache"
     )
 
 const (
@@ -29,6 +34,8 @@ type Photo struct {
     PhotographerID int       `json:"photographer_id"`
     Event          string    `json:"event"`
 }
+
+var previewCache = cache.New(cache.NoExpiration, cache.NoExpiration)
 
 func main() {
     dbInfo := "host=localhost port=5432 user=" + dbUser + " password=" + dbPassword + " dbname=" + dbName + " sslmode=disable"
@@ -149,6 +156,60 @@ router.POST("/api/upload", func(c *gin.Context) {
 
         c.JSON(http.StatusOK, photos)
     })
+
+    router.GET("/api/photo/preview/:filename/:level", func(c *gin.Context) {
+    filename := c.Param("filename")
+    level := c.Param("level")
+
+    var width uint
+    switch level {
+    case "1":
+        width = 300
+    case "2":
+        width = 600
+    default:
+        c.String(http.StatusBadRequest, "Invalid level")
+        return
+    }
+
+    // Check cache
+    cacheKey := fmt.Sprintf("%s_%d", filename, width)
+    if cached, found := previewCache.Get(cacheKey); found {
+        c.Data(http.StatusOK, "image/jpeg", cached.([]byte))
+        return
+    }
+
+    filePath := filepath.Join(uploadDir, filename)
+    file, err := os.Open(filePath)
+    if err != nil {
+        c.String(http.StatusNotFound, "File not found")
+        return
+    }
+    defer file.Close()
+
+    img, err := jpeg.Decode(file)
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Error decoding image")
+        return
+    }
+
+    // Resize image
+    resizedImg := resize.Resize(width, 0, img, resize.Lanczos3)
+
+    // Encode resized image to buffer
+    var buf bytes.Buffer
+    err = jpeg.Encode(&buf, resizedImg, nil)
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Error encoding image")
+        return
+    }
+
+    // Cache the resized image
+    previewCache.Set(cacheKey, buf.Bytes(), cache.NoExpiration)
+
+    c.Data(http.StatusOK, "image/jpeg", buf.Bytes())
+})
+      
 
     router.Run(":8080")
 }
