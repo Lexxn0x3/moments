@@ -43,7 +43,7 @@ form.addEventListener('submit', async (e) => {
                 progressBar.remove();
             } else {
                 toastr.error(`Failed to upload ${file.name}.`);
-                progressBar.querySelector('.file-name').textContent = `Failed to upload ${file.name}`;
+                progressBar.querySelector('.file-name').textContent = file.name;
                 progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
                 progressBar.querySelector('.retry-button').style.display = "inline-block";
             }
@@ -58,7 +58,7 @@ form.addEventListener('submit', async (e) => {
 
         xhr.onerror = function() {
             toastr.error(`Failed to upload ${file.name}.`);
-            progressBar.querySelector('.file-name').textContent = `Failed to upload ${file.name}`;
+            progressBar.querySelector('.file-name').textContent = file.name;
             progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
             progressBar.querySelector('.retry-button').style.display = "inline-block";
         };
@@ -206,20 +206,20 @@ async function displayPhoto(index) {
     const media = photos[index];
     const largePhoto = document.getElementById('large-photo');
     const largeVideo = document.getElementById('large-video');
-    /* const loadingGif = document.getElementById('loading-gif'); */
+    const loadingGif = document.getElementById('loading-gif');
     const caption = document.getElementById('media-caption');
     const fileExtension = media.filename.split('.').pop().toLowerCase();
 
-    /* loadingGif.style.display = 'block';
+    loadingGif.style.display = 'block';
     largePhoto.style.display = 'none';
-    largeVideo.style.display = 'none'; */
+    largeVideo.style.display = 'none';
 
     if (fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'png' || fileExtension === 'gif') {
         largePhoto.src = `/api/photo/${media.filename}`;
-        /* largePhoto.onload = () => {
+        largePhoto.onload = () => {
             loadingGif.style.display = 'none';
             largePhoto.style.display = 'block';
-        }; */
+        };
     } else if (fileExtension === 'mp4' || fileExtension === 'webm' || fileExtension === 'mov') {
         largeVideo.src = `/api/video/${media.filename}`;
         /* largeVideo.onload = () => {
