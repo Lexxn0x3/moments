@@ -30,8 +30,6 @@ form.addEventListener('submit', async (e) => {
         let file = files[i];
         formData.append('image', file);
 
-        status.innerHTML = `🦊 Uploaded ${files[i].length+1} out of ${files.length} files!`;
-
         const progressBar = createProgressBar(file.name);
         uploadProgress.appendChild(progressBar);
 
@@ -41,6 +39,7 @@ form.addEventListener('submit', async (e) => {
         xhr.onload = (function(file) {
             return function() {
                 if (xhr.status === 200) {
+                    status.innerHTML = `🦊 Uploaded ${files[i].length+1} out of your ${files.length} file(s)!`;
                     toastr.success(`Uploaded ${file.name} successfully!`);
                 } else {
                     toastr.error(`Failed to upload ${file.name}.`);
