@@ -62,97 +62,101 @@ func main() {
     
 
 router.POST("/api/upload", func(c *gin.Context) {
-    file, header, err := c.Request.FormFile("media")
-    if err != nil {
-        c.String(http.StatusBadRequest, "Bad request")
-        return
-    }
-    defer file.Close()
+		file, header, err := c.Request.FormFile("image")
+		if err != nil {
+			log.Printf("Error reading form file: %v", err)
+			c.String(http.StatusBadRequest, "Bad request")
+			return
+		}
+		defer file.Close()
 
-    uuid := uuid.New().String()
-    extension := strings.ToLower(filepath.Ext(header.Filename))
-    filename := uuid + extension
+		uuid := uuid.New().String()
+		extension := strings.ToLower(filepath.Ext(header.Filename))
+		filename := uuid + extension
 
-    filePath := filepath.Join(uploadDir, filename)
-    out, err := os.Create(filePath)
-    if err != nil {
-        c.String(http.StatusInternalServerError, "Unable to save the file")
-        return
-    }
-    defer out.Close()
+		filePath := filepath.Join(uploadDir, filename)
+		out, err := os.Create(filePath)
+		if err != nil {
+			log.Printf("Error creating file: %v", err)
+			c.String(http.StatusInternalServerError, "Unable to save the file")
+			return
+		}
+		defer out.Close()
 
-    _, err = out.ReadFrom(file)
-    if err != nil {
-        c.String(http.StatusInternalServerError, "Unable to save the file")
-        return
-    }
+		_, err = out.ReadFrom(file)
+		if err != nil {
+			log.Printf("Error reading from file: %v", err)
+			c.String(http.StatusInternalServerError, "Unable to save the file")
+			return
+		}
 
-    var dateTaken time.Time
-    var mediaType string
+		var dateTaken time.Time
+		var mediaType string
 
-    switch extension {
-    case ".jpg", ".jpeg", ".png":
-        mediaType = "image"
-        file.Seek(0, 0)
-        exifData, err := exif.Decode(file)
-        if err == nil {
-            dateTaken, err = exifData.DateTime()
-            if err != nil {
-                dateTaken = time.Now()
-            }
-        } else {
-            dateTaken = time.Now()
-        }
-    case ".mp4", ".mov", ".MOV":
-        mediaType = "video"
-        dateTaken = time.Now()
+		switch extension {
+		case ".jpg", ".jpeg", ".png":
+			mediaType = "image"
+			file.Seek(0, 0)
+			exifData, err := exif.Decode(file)
+			if err == nil {
+				dateTaken, err = exifData.DateTime()
+				if err != nil {
+					dateTaken = time.Now()
+				}
+			} else {
+				dateTaken = time.Now()
+			}
+		case ".mp4", ".mov", ".MOV":
+			mediaType = "video"
+			dateTaken = time.Now()
+			previewPath := filepath.Join(uploadDir, uuid+"_preview.jpg")
+			cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", "00:00:01.000", "-vframes", "1", previewPath)
+			output, err := cmd.CombinedOutput()
+			if err != nil {
+				log.Printf("Error generating video preview: %v\nFFmpeg output: %s", err, output)
+				c.String(http.StatusInternalServerError, "Error generating video preview")
+				return
+			}
+		case ".heic", ".HEIC":
+			mediaType = "image"
+			jpgFilename := uuid + ".jpg"
+			jpgFilePath := filepath.Join(uploadDir, jpgFilename)
+			err = convertHeicToJpg(filePath, jpgFilePath)
+			if err != nil {
+				log.Printf("Error converting HEIC to JPG: %v", err)
+				c.String(http.StatusInternalServerError, "Error converting HEIC to JPG")
+				return
+			}
+			filePath = jpgFilePath
+			filename = jpgFilename
+			file.Seek(0, 0)
+			exifData, err := exif.Decode(file)
+			if err == nil {
+				dateTaken, err = exifData.DateTime()
+				if err != nil {
+					dateTaken = time.Now()
+				}
+			} else {
+				dateTaken = time.Now()
+			}
+		default:
+			log.Printf("Unsupported file type: %s", extension)
+			c.String(http.StatusBadRequest, "Unsupported file type")
+			return
+		}
 
-        previewPath := filepath.Join(uploadDir, uuid+"_preview.jpg")
-        cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", "00:00:01.000", "-vframes", "1", previewPath)
-        output, err := cmd.CombinedOutput()
-        if err != nil {
-            log.Printf("Error generating video preview: %v\nFFmpeg output: %s", err, output)
-            c.String(http.StatusInternalServerError, "Error generating video preview")
-            return
-        }
-    case ".heic", ".HEIC":
-        mediaType = "image"
-        jpgFilename := uuid + ".jpg"
-        jpgFilePath := filepath.Join(uploadDir, jpgFilename)
-        err = convertHeicToJpg(filePath, jpgFilePath)
-        if err != nil {
-            c.String(http.StatusInternalServerError, "Error converting HEIC to JPG")
-            return
-        }
+		metadata := header.Filename
 
-        filePath = jpgFilePath
-        filename = jpgFilename
-        file.Seek(0, 0)
-        exifData, err := exif.Decode(file)
-        if err == nil {
-            dateTaken, err = exifData.DateTime()
-            if err != nil {
-                dateTaken = time.Now()
-            }
-        } else {
-            dateTaken = time.Now()
-        }
-    default:
-        c.String(http.StatusBadRequest, "Unsupported file type")
-        return
-    }
+		_, err = db.Exec("INSERT INTO photos (filename, metadata, date_taken, type) VALUES ($1, $2, $3, $4)", filename, metadata, dateTaken, mediaType)
+		if err != nil {
+			log.Printf("Error saving metadata to database: %v", err)
+			c.String(http.StatusInternalServerError, "Failed to save metadata")
+			return
+		}
 
-    metadata := header.Filename
-
-    _, err = db.Exec("INSERT INTO photos (filename, metadata, date_taken, type) VALUES ($1, $2, $3, $4)", filename, metadata, dateTaken, mediaType)
-    if err != nil {
-        c.String(http.StatusInternalServerError, "Failed to save metadata")
-        return
-    }
-
-    c.String(http.StatusOK, "Upload successful")
-})
-    router.GET("/api/photos", func(c *gin.Context) {
+		c.String(http.StatusOK, "Upload successful")
+	})  
+router.GET("/api/photos", func(c *gin.Context) {
         rows, err := db.Query("SELECT filename, metadata, date_taken, photographer_id, event, type FROM photos ORDER BY date_taken DESC")
         if err != nil {
             log.Fatal(err)
@@ -374,4 +378,3 @@ func convertHeicToJpg(input, output string) error {
 
 	return nil
 }
-
