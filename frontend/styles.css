@@ -53,6 +53,15 @@ form {
     border-radius: 0.1875rem;
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
+
+.btn.disabled, .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    background-color: #e0e0e0;
+    color: #a0a0a0;
+    border-color: #d0d0d0;
+}
+
 .btn-pink {
     display: inline-block;
     border-color: #db4590;

@@ -1,12 +1,26 @@
 let currentPhotoIndex = 0;
 let photos = [];
 
+const fileInput = document.getElementById('file-upload');
+const status = document.getElementById('status');
+const uploadButton = document.getElementById('upload-button');
+const fileUploadLabel = document.getElementById('file-upload-label');
+
+status.innerHTML = "Let's upload some files!";
+
+fileInput.addEventListener('change', () => {
+	if (fileInput.files.length > 0) {
+		uploadButton.disabled = false;
+		fileUploadLabel.textContent = `Selected ${fileInput.files.length} file(s)`;
+	} else {
+		uploadButton.disabled = true;
+		fileUploadLabel.textContent = 'Select files';
+	}
+});
+
 document.getElementById('upload-form').addEventListener('submit', async (e) => {
 	e.preventDefault();
-	const files = document.getElementById('images').files;
-	const status = document.getElementById('status');
-	status.innerHTML = '';
-
+	const files = fileInput.files;
 	for (let i = 0; i < files.length; i++) {
 		const formData = new FormData();
 		formData.append('image', files[i]);
