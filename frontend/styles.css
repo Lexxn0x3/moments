@@ -4,7 +4,6 @@ body {
     padding: 0;
     min-height: 100vh;
     display: flex;
-    text-align: center;
 }
 
 form {
@@ -332,7 +331,7 @@ form {
 .progress {
     height: 100%;
     line-height: 20px;
-    background: linear-gradient(60deg, #0909a8, #4444ee, #ef93fc, #ff6078, #c2213c);
+    background-color: #c2213c;
     text-align: center;
     color: white;
     transition: width 0.3s ease;
