@@ -34,12 +34,13 @@
     <div id="photo-modal" class="modal">
         <span class="close">&times;</span>
         <div class="modal-content-wrapper">
-            <img class="modal-content" id="large-photo">
-            <div class="caption" id="photo-caption"></div>
+            <video class="modal-content modal-video" id="large-video" controls></video>
+            <img class="modal-content modal-photo" id="large-photo" alt="Photo" />
+            <div class="caption" id="media-caption"></div>
         </div>
-        <a class="prev" id="prev-photo">&#10094;</a>
-        <a class="next" id="next-photo">&#10095;</a>
-    </div>
+        <a class="prev" id="prev-media">&#10094;</a>
+        <a class="next" id="next-media">&#10095;</a>
+    </div>        
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="scripts/notifications.js"></script>
