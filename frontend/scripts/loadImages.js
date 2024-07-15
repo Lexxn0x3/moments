@@ -18,18 +18,28 @@ fileInput.addEventListener('change', () => {
 	}
 });
 
-const form = document.getElementById('upload-form');
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const files = fileInput.files;
-    const uploadProgress = document.getElementById('upload-progress');
 
     for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
-        formData.append('image', files[i]);
+        let file = files[i];
 
-        const progressBar = createProgressBar(files[i].name);
+        if (file.type === 'image/heic' || file.type === 'image/heif') {
+            try {
+                const jpegBlob = await heic2any({ blob: file });
+                file = new File([jpegBlob], file.name.replace(/\.[^/.]+$/, '.jpg'), { type: 'image/jpeg' });
+            } catch (error) {
+                toastr.error(`Failed to convert ${file.name} from HEIC to JPEG.`);
+                continue;
+            }
+        }
+
+        formData.append('image', file);
+
+        const progressBar = createProgressBar(file.name);
         uploadProgress.appendChild(progressBar);
 
         const xhr = new XMLHttpRequest();
@@ -44,17 +54,17 @@ form.addEventListener('submit', async (e) => {
                     toastr.error(`Failed to upload ${file.name}.`);
                 }
                 progressBar.remove();
-				fileInput.value = '';
+                fileInput.value = '';
             };
-        })(files[i]);
+        })(file);
 
         xhr.onerror = (function(file) {
             return function() {
                 toastr.error(`Failed to upload ${file.name}.`);
                 progressBar.remove();
-				fileInput.files = null;
+                fileInput.value = '';
             };
-        })(files[i]);
+        })(file);
 
         xhr.upload.addEventListener('progress', (event) => {
             if (event.lengthComputable) {
@@ -66,7 +76,7 @@ form.addEventListener('submit', async (e) => {
         xhr.send(formData);
     }
 
-    fileInput.files = null;
+    fileInput.value = '';
 });
 
 function createProgressBar(fileName) {
