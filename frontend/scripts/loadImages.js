@@ -66,8 +66,6 @@ form.addEventListener('submit', async (e) => {
         xhr.send(formData);
     }
 
-    status.innerHTML = `Let's upload some files!`;
-
     fileInput.value = '';
 	fileUploadLabel.textContent = 'Select files';
 	uploadButton.style.display = "none";
