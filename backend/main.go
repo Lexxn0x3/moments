@@ -103,22 +103,23 @@ router.POST("/api/upload", func(c *gin.Context) {
         } else {
             dateTaken = time.Now()
         }
-    case ".mp4", ".mov":
-        mediaType = "video"
-        dateTaken = time.Now() // Use current time for video uploads
+    case ".mp4", ".mov", ".MOV":
+            mediaType = "video"
+            dateTaken = time.Now() // Use current time for video uploads
 
-        // Generate a video preview
-        previewPath := filepath.Join(uploadDir, uuid+"_preview.jpg")
-        cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", "00:00:01.000", "-vframes", "1", previewPath)
-        err = cmd.Run()
-        if err != nil {
-            c.String(http.StatusInternalServerError, "Error generating video preview")
+            // Generate a video preview
+            previewPath := filepath.Join(uploadDir, uuid+"_preview.jpg")
+            cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", "00:00:01.000", "-vframes", "1", previewPath)
+            output, err := cmd.CombinedOutput() // Capture combined standard output and standard error
+            if err != nil {
+                log.Printf("Error generating video preview: %v\nFFmpeg output: %s", err, output)
+                c.String(http.StatusInternalServerError, "Error generating video preview")
+                return
+            }
+        default:
+            c.String(http.StatusBadRequest, "Unsupported file type")
             return
         }
-    default:
-        c.String(http.StatusBadRequest, "Unsupported file type")
-        return
-    }
 
     metadata := header.Filename
 
