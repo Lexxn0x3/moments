@@ -96,7 +96,6 @@ function createProgressBar(fileName) {
     retryButton.style.display = 'none';
     retryButton.addEventListener('click', () => {
         retryUpload(fileName, progressBar);
-        progressBar.remove();
     });
     progressBar.appendChild(retryButton);
     
@@ -108,7 +107,9 @@ function retryUpload(fileName, progressBar) {
     const formData = new FormData();
     formData.append('image', file);
 
-    const progressBar = createProgressBar(file.name);
+    
+    progressBar.remove();
+    progressBar = createProgressBar(file.name);
     uploadProgress.appendChild(progressBar);
 
     const xhr = new XMLHttpRequest();
