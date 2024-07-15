@@ -213,6 +213,7 @@ router.GET("/api/photos", func(c *gin.Context) {
     })
 
     
+
 router.GET("/api/photo/preview/:filename/:level", func(c *gin.Context) {
     filename := c.Param("filename")
     level := c.Param("level")
@@ -243,13 +244,18 @@ router.GET("/api/photo/preview/:filename/:level", func(c *gin.Context) {
         return
     }
 
-    // Check cache
-    cacheKey := fmt.Sprintf("%s_%d", previewFilename, width)
-    if cached, found := previewCache.Get(cacheKey); found {
-        c.Data(http.StatusOK, "image/jpeg", cached.([]byte))
+    // Generate a new preview filename for the resized image
+    resizedPreviewFilename := fmt.Sprintf("%s_%d.jpg", previewFilename, width)
+    resizedPreviewFilePath := filepath.Join(uploadDir, resizedPreviewFilename)
+
+    // Check if the resized preview image exists on disk
+    if _, err := os.Stat(resizedPreviewFilePath); err == nil {
+        // If the file exists, serve it directly
+        c.File(resizedPreviewFilePath)
         return
     }
 
+    // If the resized preview image does not exist, generate it
     filePath := filepath.Join(uploadDir, previewFilename)
     file, err := os.Open(filePath)
     if err != nil {
@@ -267,20 +273,23 @@ router.GET("/api/photo/preview/:filename/:level", func(c *gin.Context) {
     // Resize image
     resizedImg := resize.Resize(width, 0, img, resize.Lanczos3)
 
-    // Encode resized image to buffer
-    var buf bytes.Buffer
-    err = jpeg.Encode(&buf, resizedImg, nil)
+    // Save resized image to disk
+    out, err := os.Create(resizedPreviewFilePath)
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Error creating preview file")
+        return
+    }
+    defer out.Close()
+
+    err = jpeg.Encode(out, resizedImg, nil)
     if err != nil {
         c.String(http.StatusInternalServerError, "Error encoding image")
         return
     }
 
-    // Cache the resized image
-    previewCache.Set(cacheKey, buf.Bytes(), cache.NoExpiration)
-
-    c.Data(http.StatusOK, "image/jpeg", buf.Bytes())
+    // Serve the newly created resized preview image
+    c.File(resizedPreviewFilePath)
 })
-
       
 router.GET("/api/video/:filename", func(c *gin.Context) {
     filename := c.Param("filename")
