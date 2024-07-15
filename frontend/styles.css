@@ -160,6 +160,8 @@ main {
     justify-content: center;
     padding-top: 60px;
     color: #fff;
+    margin-top: 5vh;
+    flex-wrap: wrap;
 }
 
 footer {

@@ -33,7 +33,7 @@ async function loadImages() {
 
 	photos.forEach((photo, index) => {
 		const img = document.createElement('img');
-		img.src = `/api/photo/${photo.filename}`;
+		img.src = `/api/photo/preview/${photo.filename}/2`;
 		img.alt = photo.metadata;
 		img.classList.add('photo');
 		img.dataset.index = index;
