@@ -309,16 +309,29 @@ form {
 #toast-container > .toast {
     top: 0px;
     right: 0px;
-    padding: 20px;
     position: fixed;
+    pointer-events: all;
     z-index: 9999;
 }
 
-/* Preventing Toastr notifications from affecting layout */
 #toast-container {
+    padding: 20px;
     pointer-events: none;
 }
 
-#toast-container > .toast {
-    pointer-events: all;
+.progress-bar {
+    margin-bottom: 10px;
+    padding: 5px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.progress {
+    height: 20px;
+    background-color: #4caf50;
+    text-align: center;
+    line-height: 20px;
+    color: white;
+    border-radius: 4px;
 }

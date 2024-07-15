@@ -21,25 +21,49 @@ fileInput.addEventListener('change', () => {
 const form = document.getElementById('upload-form');
 form.addEventListener('submit', async (e) => {
 	e.preventDefault();
+
 	const files = fileInput.files;
+	const uploadProgress = document.getElementById('upload-progress');
 	for (let i = 0; i < files.length; i++) {
-		const formData = new FormData();
-		formData.append('image', files[i]);
+        const formData = new FormData();
+        formData.append('image', files[i]);
 
-		const response = await fetch('/api/upload', {
-			method: 'POST',
-			body: formData,
-		});
+        const progressBar = createProgressBar(files[i].name);
+        uploadProgress.appendChild(progressBar);
 
-		if (response.ok) {
-			toastr.success(`Uploaded ${files[i].name} successfully!`);
-			loadImages();
-		} else {
-			toastr.error(`Failes to upload ${files[i].name}.`);
-		}
-	}
-	fileInput.value = null;
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload');
+        xhr.upload.addEventListener('progress', (event) => {
+            if (event.lengthComputable) {
+                const percentComplete = (event.loaded / event.total) * 100;
+                progressBar.style.width = percentComplete.toFixed(2) + '%';
+            }
+        });
+        xhr.onload = async () => {
+            if (xhr.status === 200) {
+                toastr.success(`Uploaded ${files[i].name} successfully!`);
+                loadImages();
+            } else {
+                toastr.error(`Failed to upload ${files[i].name}.`);
+            }
+            progressBar.remove();
+        };
+        xhr.onerror = () => {
+            toastr.error(`Failed to upload ${files[i].name}.`);
+            progressBar.remove();
+        };
+        xhr.send(formData);
+    }
+    fileInput.value = null;
 });
+
+function createProgressBar(fileName) {
+    const progressBar = document.createElement('div');
+    progressBar.classList.add('progress-bar');
+    progressBar.innerHTML = `<div class="progress" style="width: 0%" aria-valuemin="0" aria-valuemax="100"></div>
+                             <span class="file-name">${fileName}</span>`;
+    return progressBar;
+}
 
 async function loadImages() {
 	const response = await fetch('/api/photos');
