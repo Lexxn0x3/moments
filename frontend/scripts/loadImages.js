@@ -10,10 +10,10 @@ status.innerHTML = "Let's upload some files!";
 
 fileInput.addEventListener('change', () => {
 	if (fileInput.files.length > 0) {
-		uploadButton.disabled = false;
+		uploadButton.style.display = "inline-block";
 		fileUploadLabel.textContent = `Selected ${fileInput.files.length} file(s)`;
 	} else {
-		uploadButton.disabled = true;
+		uploadButton.style.display = "none";
 		fileUploadLabel.textContent = 'Select files';
 	}
 });
@@ -47,7 +47,7 @@ form.addEventListener('submit', async (e) => {
                 progressBar.remove();
                 fileInput.files = '';
 				fileUploadLabel.textContent = 'Select files';
-				uploadButton.disabled = true;
+				uploadButton.style.display = "none";
             };
         })(file);
 
@@ -57,7 +57,7 @@ form.addEventListener('submit', async (e) => {
                 progressBar.remove();
                 fileInput.value = '';
 				fileUploadLabel.textContent = 'Select files';
-				uploadButton.disabled = true;
+				uploadButton.style.display = "none";
             };
         })(file);
 
@@ -73,7 +73,7 @@ form.addEventListener('submit', async (e) => {
 
     fileInput.value = '';
 	fileUploadLabel.textContent = 'Select files';
-	uploadButton.disabled = true;
+	uploadButton.style.display = "none";
 });
 
 function createProgressBar(fileName) {
