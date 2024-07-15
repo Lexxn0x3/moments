@@ -27,7 +27,7 @@ form.addEventListener('submit', async (e) => {
 
     for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
-        formData.append('file', files[i]);
+        formData.append('image', files[i]);
 
         const progressBar = createProgressBar(files[i].name);
         uploadProgress.appendChild(progressBar);
