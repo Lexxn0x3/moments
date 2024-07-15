@@ -39,22 +39,25 @@ form.addEventListener('submit', async (e) => {
         xhr.onload = async function() {
             if (xhr.status === 200) {
                 toastr.success(`Uploaded ${file.name} successfully!`);
+                progressBar.remove();
             } else {
                 toastr.error(`Failed to upload ${file.name}.`);
+                progressBar.querySelector('.file-name').textContent = `Failed to upload ${file.name}`;
+                progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
             }
-            status.innerHTML = `😳 ${i + 1} out of ${files.length} 😴`;
-            progressBar.remove();
             
             if (i === files.length - 1) {
                 fileInput.value = '';
                 fileUploadLabel.textContent = 'Select files';
                 uploadButton.style.display = "none";
+                loadImages()
             }
         };
 
         xhr.onerror = function() {
             toastr.error(`Failed to upload ${file.name}.`);
-            progressBar.remove();
+            progressBar.querySelector('.file-name').textContent = `Failed to upload ${file.name}`;
+            progressBar.querySelector('.progress').style.background = "linear-gradient(#ff6078, #c2213c, #c2213c)";
         };
 
         xhr.upload.addEventListener('progress', (event) => {
