@@ -18,6 +18,7 @@ fileInput.addEventListener('change', () => {
 	}
 });
 
+const form = document.getElementById('upload-form');
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
