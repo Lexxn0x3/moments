@@ -33,21 +33,19 @@ form.addEventListener('submit', async (e) => {
         const progressBar = createProgressBar(file.name);
         uploadProgress.appendChild(progressBar);
 
+        status.innerHTML = `😳 ${files[i].length+1} out of ${files.length} 😴`;
+
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/api/upload');
 
         xhr.onload = (function(file) {
             return function() {
                 if (xhr.status === 200) {
-                    status.innerHTML = `🦊 Uploaded ${files[i].length+1} out of your ${files.length} file(s)!`;
                     toastr.success(`Uploaded ${file.name} successfully!`);
                 } else {
                     toastr.error(`Failed to upload ${file.name}.`);
                 }
                 progressBar.remove();
-                fileInput.files = '';
-				fileUploadLabel.textContent = 'Select files';
-				uploadButton.style.display = "none";
             };
         })(file);
 
@@ -55,9 +53,6 @@ form.addEventListener('submit', async (e) => {
             return function() {
                 toastr.error(`Failed to upload ${file.name}.`);
                 progressBar.remove();
-                fileInput.value = '';
-				fileUploadLabel.textContent = 'Select files';
-				uploadButton.style.display = "none";
             };
         })(file);
 
@@ -70,6 +65,8 @@ form.addEventListener('submit', async (e) => {
 
         xhr.send(formData);
     }
+
+    status.innerHTML = `Let's upload some files!`;
 
     fileInput.value = '';
 	fileUploadLabel.textContent = 'Select files';
