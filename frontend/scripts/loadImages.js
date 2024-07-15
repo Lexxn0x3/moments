@@ -18,7 +18,8 @@ fileInput.addEventListener('change', () => {
 	}
 });
 
-document.getElementById('upload-form').addEventListener('submit', async (e) => {
+const form = document.getElementById('upload-form');
+form.addEventListener('submit', async (e) => {
 	e.preventDefault();
 	const files = fileInput.files;
 	for (let i = 0; i < files.length; i++) {
@@ -32,9 +33,11 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
 
 		if (response.ok) {
 			toastr.success(`Uploaded ${files[i].name} successfully!`);
+			form.reset();
 			loadImages();
 		} else {
 			toastr.error(`Failes to upload ${files[i].name}.`);
+			form.reset();
 		}
 	}
 });

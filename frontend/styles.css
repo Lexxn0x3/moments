@@ -211,7 +211,6 @@ form {
     border: 2px solid;
     border-image: linear-gradient(60deg, #0909a8, #4444ee, #ef93fc, #ff6078, #c2213c) 1;
     border-radius: 10px;
-    padding: 2px;
 }
 
 /* Modal styles */
@@ -294,3 +293,16 @@ form {
     background-color: rgba(0,0,0,0.8);
 }
 
+#toast-container > .toast {
+    position: fixed;
+    z-index: 9999;
+}
+
+/* Preventing Toastr notifications from affecting layout */
+#toast-container {
+    pointer-events: none;
+}
+
+#toast-container > .toast {
+    pointer-events: all;
+}
