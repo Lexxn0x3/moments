@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -30,13 +31,16 @@ const (
     uploadDir  = "../uploads"
 )
 
+
 type Photo struct {
     Filename       string    `json:"filename"`
     Metadata       string    `json:"metadata"`
     DateTaken      time.Time `json:"date_taken"`
     PhotographerID int       `json:"photographer_id"`
     Event          string    `json:"event"`
+    Type           string    `json:"type"`
 }
+
 
 var previewCache = cache.New(cache.NoExpiration, cache.NoExpiration)
 
@@ -64,27 +68,33 @@ router.POST("/api/upload", func(c *gin.Context) {
         defer file.Close()
 
         uuid := uuid.New().String()
-        extension := filepath.Ext(header.Filename)
-        filename := uuid + extension
+    extension := filepath.Ext(header.Filename)
+    filename := uuid + extension
 
-        filePath := filepath.Join(uploadDir, filename)
-        out, err := os.Create(filePath)
-        if err != nil {
-            c.String(http.StatusInternalServerError, "Unable to save the file")
-            return
-        }
-        defer out.Close()
+    filePath := filepath.Join(uploadDir, filename)
+    out, err := os.Create(filePath)
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Unable to save the file")
+        return
+    }
+    defer out.Close()
 
-        _, err = out.ReadFrom(file)
-        if err != nil {
-            c.String(http.StatusInternalServerError, "Unable to save the file")
-            return
-        }
+    _, err = out.ReadFrom(file)
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Unable to save the file")
+        return
+    }
 
+    var dateTaken time.Time
+    var mediaType string
+
+    // Check file extension to determine if it's an image or video
+    switch extension {
+    case ".jpg", ".jpeg", ".png":
+        mediaType = "image"
         // Extract EXIF data
         file.Seek(0, 0) // Reset file pointer
         exifData, err := exif.Decode(file)
-        var dateTaken time.Time
         if err == nil {
             dateTaken, err = exifData.DateTime()
             if err != nil {
@@ -93,19 +103,35 @@ router.POST("/api/upload", func(c *gin.Context) {
         } else {
             dateTaken = time.Now()
         }
+    case ".mp4", ".mov":
+        mediaType = "video"
+        dateTaken = time.Now() // Use current time for video uploads
 
-        metadata := header.Filename
-
-        _, err = db.Exec("INSERT INTO photos (filename, metadata, date_taken) VALUES ($1, $2, $3)", filename, metadata, dateTaken)
+        // Generate a video preview
+        previewPath := filepath.Join(uploadDir, uuid+"_preview.jpg")
+        cmd := exec.Command("ffmpeg", "-i", filePath, "-ss", "00:00:01.000", "-vframes", "1", previewPath)
+        err = cmd.Run()
         if err != nil {
-            c.String(http.StatusInternalServerError, "Failed to save metadata")
+            c.String(http.StatusInternalServerError, "Error generating video preview")
             return
         }
+    default:
+        c.String(http.StatusBadRequest, "Unsupported file type")
+        return
+    }
 
-        c.String(http.StatusOK, "Upload successful")
-    })
+    metadata := header.Filename
+
+    _, err = db.Exec("INSERT INTO photos (filename, metadata, date_taken, type) VALUES ($1, $2, $3, $4)", filename, metadata, dateTaken, mediaType)
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Failed to save metadata")
+        return
+    }
+
+    c.String(http.StatusOK, "Upload successful")
+})
     router.GET("/api/photos", func(c *gin.Context) {
-        rows, err := db.Query("SELECT filename, metadata, date_taken, photographer_id, event FROM photos ORDER BY date_taken DESC")
+        rows, err := db.Query("SELECT filename, metadata, date_taken, photographer_id, event, type FROM photos ORDER BY date_taken DESC")
         if err != nil {
             log.Fatal(err)
         }
@@ -114,7 +140,7 @@ router.POST("/api/upload", func(c *gin.Context) {
         var photos []Photo
         for rows.Next() {
             var photo Photo
-            rows.Scan(&photo.Filename, &photo.Metadata, &photo.DateTaken, &photo.PhotographerID, &photo.Event)
+            rows.Scan(&photo.Filename, &photo.Metadata, &photo.DateTaken, &photo.PhotographerID, &photo.Event, &photo.Type)
             photos = append(photos, photo)
         }
 
@@ -160,9 +186,25 @@ router.POST("/api/upload", func(c *gin.Context) {
         c.JSON(http.StatusOK, photos)
     })
 
-    router.GET("/api/photo/preview/:filename/:level", func(c *gin.Context) {
+    
+router.GET("/api/photo/preview/:filename/:level", func(c *gin.Context) {
     filename := c.Param("filename")
     level := c.Param("level")
+
+    // Determine if the file is an image or video based on the stored metadata
+    var mediaType string
+    err := db.QueryRow("SELECT type FROM photos WHERE filename = $1", filename).Scan(&mediaType)
+    if err != nil {
+        c.String(http.StatusNotFound, "File not found")
+        return
+    }
+
+    var previewFilename string
+    if mediaType == "video" {
+        previewFilename = filename[:len(filename)-len(filepath.Ext(filename))] + "_preview.jpg"
+    } else {
+        previewFilename = filename
+    }
 
     var width uint
     switch level {
@@ -176,13 +218,13 @@ router.POST("/api/upload", func(c *gin.Context) {
     }
 
     // Check cache
-    cacheKey := fmt.Sprintf("%s_%d", filename, width)
+    cacheKey := fmt.Sprintf("%s_%d", previewFilename, width)
     if cached, found := previewCache.Get(cacheKey); found {
         c.Data(http.StatusOK, "image/jpeg", cached.([]byte))
         return
     }
 
-    filePath := filepath.Join(uploadDir, filename)
+    filePath := filepath.Join(uploadDir, previewFilename)
     file, err := os.Open(filePath)
     if err != nil {
         c.String(http.StatusNotFound, "File not found")
@@ -212,6 +254,7 @@ router.POST("/api/upload", func(c *gin.Context) {
 
     c.Data(http.StatusOK, "image/jpeg", buf.Bytes())
 })
+
       
 router.GET("/api/video/:filename", func(c *gin.Context) {
     filename := c.Param("filename")
