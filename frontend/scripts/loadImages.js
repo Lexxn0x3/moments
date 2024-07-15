@@ -90,19 +90,31 @@ function openModal(index) {
 }
 
 function displayPhoto(index) {
-	if (index < 0) index = photos.length - 1;
-	if (index >= photos.length) index = 0;
+    if (index < 0) index = photos.length - 1;
+    if (index >= photos.length) index = 0;
 
-	currentPhotoIndex = index;
-	const photo = photos[index];
-	const largePhoto = document.getElementById('large-photo');
-	const caption = document.getElementById('photo-caption');
+    currentPhotoIndex = index;
+    const media = photos[index];
+    const largePhoto = document.getElementById('large-photo');
+    const largeVideo = document.getElementById('large-video');
+    const caption = document.getElementById('media-caption');
+    const fileExtension = media.filename.split('.').pop().toLowerCase();
 
-	largePhoto.src = `/api/photo/${photo.filename}`;
-	caption.innerHTML = photo.metadata;
+    if (fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'png' || fileExtension === 'gif') {
+        largePhoto.style.display = 'block';
+        largeVideo.style.display = 'none';
+        largePhoto.src = `/api/photo/${media.filename}`;
+        largePhoto.alt = 'Photo';
+    } else if (fileExtension === 'mp4' || fileExtension === 'webm' || fileExtension === 'mov') {
+        largePhoto.style.display = 'none';
+        largeVideo.style.display = 'block';
+        largeVideo.src = `/api/video/${media.filename}`;
+    }
 
-	document.getElementById('prev-photo').onclick = () => displayPhoto(currentPhotoIndex - 1);
-	document.getElementById('next-photo').onclick = () => displayPhoto(currentPhotoIndex + 1);
+    caption.innerHTML = media.metadata;
+
+    document.getElementById('prev-media').onclick = () => displayPhoto(currentPhotoIndex - 1);
+    document.getElementById('next-media').onclick = () => displayPhoto(currentPhotoIndex + 1);
 }
 
 loadImages();
