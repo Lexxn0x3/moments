@@ -200,17 +200,30 @@ form {
 }
 
 .photo-grid img.photo {
+    position: relative;
     height: 20em;
     object-fit: cover;
     width: auto;
     border-radius: 10px;
     padding: 5px;
+    transition: transform 0.2s ease;
 }
 
-.photo-grid img.photo:hover {
-    border: 2px solid;
-    border-image: linear-gradient(60deg, #0909a8, #4444ee, #ef93fc, #ff6078, #c2213c) 1;
+.photo-grid img.photo::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     border-radius: 10px;
+    background: linear-gradient(60deg, #0909a8, #4444ee, #ef93fc, #ff6078, #c2213c);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.photo-grid img.photo:hover::after {
+    opacity: 1;
 }
 
 /* Modal styles */
@@ -294,6 +307,8 @@ form {
 }
 
 #toast-container > .toast {
+    top: 0px;
+    right: 0px;
     padding: 20px;
     position: fixed;
     z-index: 9999;
