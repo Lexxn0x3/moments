@@ -226,7 +226,6 @@ form {
     opacity: 0.7;
 }
 
-/* Modal styles */
 .modal {
     display: none;
     position: fixed;
@@ -251,7 +250,21 @@ form {
     height: 100%;
 }
 
+.loading-gif {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    display: block;
+}
+
+.modal-content.show {
+    display: block;
+}
+
 .modal-content {
+    display: none;
     max-height: 80vh;
     max-width: 80vw;
     object-fit: contain;
@@ -331,7 +344,7 @@ form {
 .progress {
     height: 100%;
     line-height: 20px;
-    background-color: #c2213c;
+    background: linear-gradient(60deg, #0909a8, #4444ee, #ef93fc, #ff6078, #c2213c);;
     text-align: center;
     color: white;
     transition: width 0.3s ease;

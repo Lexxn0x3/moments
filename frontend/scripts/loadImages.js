@@ -30,7 +30,7 @@ form.addEventListener('submit', async (e) => {
         let file = files[i];
         formData.append('image', file);
 
-        status.innerHTML = `🦊 Uploaded ${file[i] + 1} out of ${files.length} files!`;
+        status.innerHTML = `🦊 Uploaded ${files[i]+1} out of ${files.length} files!`;
 
         const progressBar = createProgressBar(file.name);
         uploadProgress.appendChild(progressBar);
@@ -42,7 +42,6 @@ form.addEventListener('submit', async (e) => {
             return function() {
                 if (xhr.status === 200) {
                     toastr.success(`Uploaded ${file.name} successfully!`);
-                    loadImages();
                 } else {
                     toastr.error(`Failed to upload ${file.name}.`);
                 }
@@ -146,7 +145,7 @@ function openModal(index) {
 	};
 }
 
-function displayPhoto(index) {
+async function displayPhoto(index) {
     if (index < 0) index = photos.length - 1;
     if (index >= photos.length) index = 0;
 
@@ -154,18 +153,27 @@ function displayPhoto(index) {
     const media = photos[index];
     const largePhoto = document.getElementById('large-photo');
     const largeVideo = document.getElementById('large-video');
+    const loadingGif = document.getElementById('loading-gif');
     const caption = document.getElementById('media-caption');
     const fileExtension = media.filename.split('.').pop().toLowerCase();
 
+    loadingGif.style.display = 'block';
+    largePhoto.style.display = 'none';
+    largeVideo.style.display = 'none';
+
     if (fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'png' || fileExtension === 'gif') {
-        largePhoto.style.display = 'block';
-        largeVideo.style.display = 'none';
         largePhoto.src = `/api/photo/${media.filename}`;
+        largePhoto.onload = () => {
+            loadingGif.style.display = 'none';
+            largePhoto.style.display = 'block';
+        };
         largePhoto.alt = 'Photo';
     } else if (fileExtension === 'mp4' || fileExtension === 'webm' || fileExtension === 'mov') {
-        largePhoto.style.display = 'none';
-        largeVideo.style.display = 'block';
         largeVideo.src = `/api/video/${media.filename}`;
+        largeVideo.onload = () => {
+            loadingGif.style.display = 'none';
+            largeVideo.style.display = 'block';
+        };
     }
 
     caption.innerHTML = media.metadata;
