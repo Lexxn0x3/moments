@@ -1,24 +1,27 @@
-
 package main
 
 import (
-    "database/sql"
-    "github.com/gin-gonic/gin"
-    "github.com/google/uuid"
-    "github.com/rwcarlsen/goexif/exif"
-    _ "github.com/lib/pq"
-    "io/ioutil"
-    "log"
-    "net/http"
-    "os"
-    "path/filepath"
-    "time"
-    "bytes"
-    "image/jpeg"
-    "github.com/nfnt/resize"
-    "fmt"
-    "github.com/patrickmn/go-cache"
-    )
+	"bytes"
+	"database/sql"
+	"fmt"
+	"image/jpeg"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	_ "github.com/lib/pq"
+	"github.com/nfnt/resize"
+	"github.com/patrickmn/go-cache"
+	"github.com/rwcarlsen/goexif/exif"
+)
 
 const (
     dbUser     = "postgres"
@@ -210,7 +213,75 @@ router.POST("/api/upload", func(c *gin.Context) {
     c.Data(http.StatusOK, "image/jpeg", buf.Bytes())
 })
       
+router.GET("/api/video/:filename", func(c *gin.Context) {
+    filename := c.Param("filename")
+    filePath := filepath.Join(uploadDir, filename)
 
+    file, err := os.Open(filePath)
+    if err != nil {
+        c.String(http.StatusNotFound, "File not found")
+        return
+    }
+    defer file.Close()
+
+    fileInfo, err := file.Stat()
+    if err != nil {
+        c.String(http.StatusInternalServerError, "Error getting file info")
+        return
+    }
+
+    fileSize := fileInfo.Size()
+    rangeHeader := c.GetHeader("Range")
+    if rangeHeader == "" {
+        // Serve the entire file
+        if strings.HasSuffix(filename, ".mov") {
+            c.Header("Content-Type", "video/quicktime")
+        } else {
+            c.Header("Content-Type", "video/mp4")
+        }
+        c.Header("Content-Length", fmt.Sprintf("%d", fileSize))
+        http.ServeFile(c.Writer, c.Request, filePath)
+        return
+    }
+
+    // Parse the range header
+    rangeParts := strings.Split(strings.TrimPrefix(rangeHeader, "bytes="), "-")
+    start, err := strconv.ParseInt(rangeParts[0], 10, 64)
+    if err != nil {
+        c.String(http.StatusBadRequest, "Invalid range")
+        return
+    }
+
+    var end int64
+    if len(rangeParts) > 1 && rangeParts[1] != "" {
+        end, err = strconv.ParseInt(rangeParts[1], 10, 64)
+        if err != nil {
+            c.String(http.StatusBadRequest, "Invalid range")
+            return
+        }
+    } else {
+        end = fileSize - 1
+    }
+
+    if start > end || start < 0 || end >= fileSize {
+        c.String(http.StatusRequestedRangeNotSatisfiable, "Requested range not satisfiable")
+        return
+    }
+
+    // Set headers for partial content response
+    if strings.HasSuffix(filename, ".mov") {
+        c.Header("Content-Type", "video/quicktime")
+    } else {
+        c.Header("Content-Type", "video/mp4")
+    }
+    c.Header("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, end, fileSize))
+    c.Header("Content-Length", fmt.Sprintf("%d", end-start+1))
+    c.Status(http.StatusPartialContent)
+
+    // Serve the requested byte range
+    file.Seek(start, 0)
+    io.CopyN(c.Writer, file, end-start+1)
+})
     router.Run(":8080")
 }
 
