@@ -214,18 +214,28 @@ function displayPhoto(index) {
     largePhoto.style.display = 'none';
     largeVideo.style.display = 'none';
 
+    largePhoto.onload = null;
+    largeVideo.onloadeddata = null;
+
     if (fileExtension === 'jpg' || fileExtension === 'jpeg' || fileExtension === 'png' || fileExtension === 'gif') {
         largePhoto.src = `/api/photo/${media.filename}`;
+        console.log(`Loading image: ${largePhoto.src}`);
+        
         largePhoto.onload = () => {
+            console.log(`Image loaded: ${largePhoto.src}`);
             loadingGif.style.display = 'none';
             largePhoto.style.display = 'block';
         };
+
         if (largePhoto.complete) {
             largePhoto.onload();
         }
     } else if (fileExtension === 'mp4' || fileExtension === 'webm' || fileExtension === 'mov') {
         largeVideo.src = `/api/video/${media.filename}`;
+        console.log(`Loading video: ${largeVideo.src}`);
+        
         largeVideo.onloadeddata = () => {
+            console.log(`Video loaded: ${largeVideo.src}`);
             loadingGif.style.display = 'none';
             largeVideo.style.display = 'block';
         };
