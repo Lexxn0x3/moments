@@ -29,7 +29,7 @@ form.addEventListener('submit', async (e) => {
         const formData = new FormData();
         let file = files[i];
 
-        if (file.type === 'image/heic' || file.type === 'image/heif') {
+        if (file.name.toLowerCase().endsWith('.heic')) {
             try {
                 const jpegBlob = await heic2any({ blob: file });
                 file = new File([jpegBlob], file.name.replace(/\.[^/.]+$/, '.jpg'), { type: 'image/jpeg' });
@@ -56,7 +56,9 @@ form.addEventListener('submit', async (e) => {
                     toastr.error(`Failed to upload ${file.name}.`);
                 }
                 progressBar.remove();
-                fileInput.value = '';
+                fileInput.files = '';
+				fileUploadLabel.textContent = 'Select files';
+				uploadButton.disabled = true;
             };
         })(file);
 
@@ -65,6 +67,8 @@ form.addEventListener('submit', async (e) => {
                 toastr.error(`Failed to upload ${file.name}.`);
                 progressBar.remove();
                 fileInput.value = '';
+				fileUploadLabel.textContent = 'Select files';
+				uploadButton.disabled = true;
             };
         })(file);
 
@@ -79,6 +83,8 @@ form.addEventListener('submit', async (e) => {
     }
 
     fileInput.value = '';
+	fileUploadLabel.textContent = 'Select files';
+	uploadButton.disabled = true;
 });
 
 function createProgressBar(fileName) {
