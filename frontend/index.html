@@ -22,7 +22,7 @@
             <form id="upload-form" enctype="multipart/form-data">
                 <label for="file-upload" id="file-upload-label" class="btn btn-pink">Select files</label>
                 <input style="display: none" id="file-upload" type="file" name="images" id="images" accept="image/*, video/*, .heic, .mov" multiple required>
-                <button class="btn btn-info" id="upload-button" type="submit" disabled>Upload</button>
+                <button class="btn btn-info" id="upload-button" type="submit" style="display: none;">Upload</button>
             </form>
             <div id="gallery" class="photo-grid"></div>
         </div>
@@ -42,7 +42,6 @@
         <a class="prev" id="prev-media">&#10094;</a>
         <a class="next" id="next-media">&#10095;</a>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.5.2/dist/heic2any.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="scripts/notifications.js"></script>
