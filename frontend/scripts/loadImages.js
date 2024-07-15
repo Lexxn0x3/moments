@@ -31,10 +31,10 @@ document.getElementById('upload-form').addEventListener('submit', async (e) => {
 		});
 
 		if (response.ok) {
-			status.innerHTML = `Uploaded ${files[i].name} successfully.<br>`;
+			toastr.success(`Uploaded ${files[i].name} successfully!`);
 			loadImages();
 		} else {
-			status.innerHTML = `Failed to upload ${files[i].name}.<br>`;
+			toastr.error(`Failes to upload ${files[i].name}.`);
 		}
 	}
 });

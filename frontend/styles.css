@@ -205,11 +205,13 @@ form {
     width: auto;
     border-radius: 10px;
     padding: 5px;
-    transition: transform .4s;
 }
 
 .photo-grid img.photo:hover {
-    transform: rotate3d(0, 1, 0.5, 3.142rad);
+    border: 2px solid;
+    border-image: linear-gradient(60deg, #0909a8, #4444ee, #ef93fc, #ff6078, #c2213c) 1;
+    border-radius: 10px;
+    padding: 2px;
 }
 
 /* Modal styles */
