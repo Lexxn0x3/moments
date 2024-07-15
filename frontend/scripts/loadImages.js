@@ -26,7 +26,7 @@ form.addEventListener('submit', async (e) => {
 	const uploadProgress = document.getElementById('upload-progress');
 	for (let i = 0; i < files.length; i++) {
         const formData = new FormData();
-        formData.append('image', files[i]);
+        formData.append('file', files[i]);
 
         const progressBar = createProgressBar(files[i].name);
         uploadProgress.appendChild(progressBar);
@@ -36,7 +36,7 @@ form.addEventListener('submit', async (e) => {
         xhr.upload.addEventListener('progress', (event) => {
             if (event.lengthComputable) {
                 const percentComplete = (event.loaded / event.total) * 100;
-                progressBar.style.width = percentComplete.toFixed(2) + '%';
+                progressBar.querySelector('.progress').style.width = percentComplete.toFixed(2) + '%';
             }
         });
         xhr.onload = async () => {

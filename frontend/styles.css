@@ -322,9 +322,6 @@ form {
 .progress-bar {
     margin-bottom: 10px;
     padding: 5px;
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
 }
 
 .progress {
@@ -334,4 +331,5 @@ form {
     line-height: 20px;
     color: white;
     border-radius: 4px;
+    transition: width 0.3s ease;
 }
